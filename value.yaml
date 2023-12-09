@@ -1,0 +1,6 @@
+# my-nodejs-app/values.yaml
+config:
+  username: myuser
+  password: mypassword
+
+
