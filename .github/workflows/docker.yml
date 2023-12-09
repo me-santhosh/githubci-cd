@@ -1,13 +1,12 @@
-name: Docker CI/CD
+name: CI/CD for Node.js App
 
 on:
   push:
     branches:
       - '*'
-      - '!test'
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,11 +18,18 @@ jobs:
       with:
         node-version: '14'
 
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build and push Docker image
+    - name: Build Docker Image
       run: |
-        docker build -t santhosh27/nodejs-app:latest .
-        docker login -u santhosh27 -p ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_BUILDKIT=1 docker build \
+          --file Dockerfile \
+          --tag santhosh27/nodejs-app:latest \
+          --build-arg DEPLOYED_FROM=${GITHUB_REF#refs/heads/} \
+          .
+
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u santhosh27 --password-stdin
         docker push santhosh27/nodejs-app:latest
+
+    - name: Deploy to Kubernetes
+      if: github.event_name == 'push' && github.ref != 'refs/heads/test'
+      run: |
+        kubectl apply -f kubernetes/deployment.yaml
