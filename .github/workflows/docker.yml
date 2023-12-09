@@ -1,0 +1,29 @@
+name: Docker CI/CD
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!test'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t santhosh27/nodejs-app:latest .
+        docker login -u santhosh27 -p ${{ secrets.DOCKER_PASSWORD }}
+        docker push santhosh27/nodejs-app:latest
